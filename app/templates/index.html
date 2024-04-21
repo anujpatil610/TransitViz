@@ -1,22 +1,41 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="header">
+<div class="container">
     <h1>Welcome to TransitViz</h1>
-    <p>Your one-stop portal for transit data visualization.</p>
-</div>
+    <p>This portal provides interactive visualizations and timetables for transit data using GTFS datasets.</p>
 
-<div class="about">
-    <h2>About This Project</h2>
-    <p>This application is designed to provide insights into transit systems using GTFS and GPS data. It allows users to view static and real-time data to improve urban transit operations and planning.</p>
-</div>
+    <!-- Navigation Buttons to Various Dashboards -->
+    <div class="dashboard-links">
+        <h2>Navigate to:</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <a href="{{ url_for('gtfs_dashboard') }}" class="btn btn-info btn-block">GTFS Dashboard</a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('timetable') }}" class="btn btn-primary btn-block">Timetable Search</a>
+            </div>
+            <div class="col-md-4">
+                <!-- Placeholder for future GPS Dashboard -->
+                <a href="#" class="btn btn-secondary btn-block disabled">GPS Dashboard (Coming Soon)</a>
+            </div>
+        </div>
+    </div>
 
-<div class="dashboards">
-    <h2>Explore Our Dashboards</h2>
-    <ul>
-        <li><a href="{{ url_for('gtfs_dashboard') }}">GTFS Static Dashboard</a> - Explore static transit data.</li>
-        <li><a href="{{ url_for('gps_dashboard') }}">GPS Real-Time Dashboard</a> - View real-time transit locations and statuses.</li>
-    </ul>
-</div>
+    <!-- Introduction or About Section -->
+    <div class="about-section mt-4">
+        <h2>About This Portal</h2>
+        <p>TransitViz is a web application designed by Anuj Patil to facilitate the exploration and analysis of public transit systems. It leverages General Transit Feed Specification (GTFS) data to provide insights into transit routes, stop timings, and overall network efficiency. Users can explore static and dynamic transit data to better understand and improve urban mobility.</p>
+    </div>
 
+    <!-- Additional Sections -->
+    <div class="additional-info mt-4">
+        <h2>Features Overview</h2>
+        <ul>
+            <li><strong>Interactive Maps:</strong> Visualize transit routes and stops on interactive maps.</li>
+            <li><strong>Data-Rich Dashboards:</strong> Dive into detailed analytics on transit operations with customizable dashboards.</li>
+            <li><strong>Real-Time Updates:</strong> (Planned Feature) Track buses and trains in real-time across the network.</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
