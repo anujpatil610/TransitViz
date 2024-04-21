@@ -1,25 +1,27 @@
-from flask import render_template, abort
+from flask import render_template
 from app import app
-from app.utils.gtfs_parser import load_gtfs_file
+from app.utils.gtfs_processor import get_routes, get_stops, get_stop_times, get_trips
 
 @app.route('/')
 def index():
     return render_template('index.html', title='Home')
 
-from flask import render_template
-from app import app
-from app.utils.gtfs_parser import load_gtfs_file
 
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
-    # Load the GTFS data after ensuring the files are extracted
-    try:
-        routes = load_gtfs_file('routes.txt')
-        return render_template('gtfs_dashboard.html', routes=routes)
-    except FileNotFoundError:
-        return "GTFS data file not found", 500
-    except Exception as e:
-        return f"An error occurred: {e}", 500
+    routes = get_routes()
+    stops = get_stops()
+    # Other data can be loaded as needed
+
+    # Here you might want to preprocess the data to only send necessary details to the frontend
+    # For now, we'll send the full DataFrames converted to HTML tables
+    routes_html = routes.to_html(classes='table table-responsive')
+    stops_html = stops.to_html(classes='table table-responsive')
+    
+    return render_template('gtfs_dashboard.html', routes_html=routes_html, stops_html=stops_html)
+
+# Additional routes can be created for more detailed data pages or API endpoints.
+
 
 
 @app.route('/gps-dashboard')

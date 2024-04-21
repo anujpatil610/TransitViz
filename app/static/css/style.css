@@ -57,3 +57,18 @@ th, td {
 thead {
     background-color: #f4f4f4;
 }
+/* Add custom styles for your tables and dashboard layout */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+}
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* You can add more styles as needed */

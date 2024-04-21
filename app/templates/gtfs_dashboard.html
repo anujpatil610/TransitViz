@@ -1,35 +1,16 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>GTFS Routes Dashboard</h1>
-{% if routes is not none and not routes.empty %}
-<table>
-    <thead>
-        <tr>
-            <th>Route ID</th>
-            <th>Agency ID</th>
-            <th>Short Name</th>
-            <th>Long Name</th>
-            <th>Type</th>
-            <th>Color</th>
-            <th>Text Color</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for index, row in routes.iterrows() %}
-        <tr style="color: #{{ row['route_text_color'] }}; background-color: #{{ row['route_color'] }}">
-            <td>{{ row['route_id'] }}</td>
-            <td>{{ row['agency_id'] }}</td>
-            <td>{{ row['route_short_name'] }}</td>
-            <td>{{ row['route_long_name'] }}</td>
-            <td>{{ row['route_type'] }}</td>
-            <td>{{ row['route_color'] }}</td>
-            <td>{{ row['route_text_color'] }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>No route data available.</p>
-{% endif %}
+<div class="container">
+    <h1>GTFS Dashboard</h1>
+    <h2>Routes</h2>
+    <div class="routes-table" id="routes">
+        {{ routes_html|safe }}
+    </div>
+    <h2>Stops</h2>
+    <div class="stops-table" id="stops">
+        {{ stops_html|safe }}
+    </div>
+    <!-- More sections will be added here -->
+</div>
 {% endblock %}
