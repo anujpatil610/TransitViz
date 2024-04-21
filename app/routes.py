@@ -1,5 +1,6 @@
+from flask import render_template, abort
 from app import app
-from flask import render_template
+from app.utils.gtfs_parser import load_gtfs_file
 
 @app.route('/')
 def index():
@@ -7,8 +8,17 @@ def index():
 
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
-    # Assume data loading functions are defined and called here
-    return render_template('gtfs_dashboard.html', title='GTFS Dashboard')
+    try:
+        routes = load_gtfs_file('routes.txt')  # Ensure this file exists in the gtfs directory
+        trips = load_gtfs_file('trips.txt')
+        stops = load_gtfs_file('stops.txt')
+        stop_times = load_gtfs_file('stop_times.txt')
+
+        return render_template('gtfs_dashboard.html', routes=routes, trips=trips, stops=stops, stop_times=stop_times)
+    except Exception as e:
+        # Log error and abort with a server error
+        app.logger.error('Failed to load GTFS data: {}'.format(e))
+        abort(500)  # Internal Server Error
 
 @app.route('/gps-dashboard')
 def gps_dashboard():
