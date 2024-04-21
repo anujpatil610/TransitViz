@@ -1,0 +1,7 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Welcome to TransitViz</h1>
+<p>This is a basic Flask application for visualizing transit data.</p>
+<a href="{{ url_for('chart') }}">View Transit Chart</a>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Transit Data Chart</h1>
+<div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
+<script>
+    var data = [{
+        x: [1, 2, 3, 4],
+        y: [10, 11, 12, 13],
+        type: 'scatter'
+    }];
+
+    Plotly.newPlot('myDiv', data);
+</script>
+{% endblock %}

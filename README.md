@@ -1,2 +1,15 @@
 # TransitViz
-A Flask-based web application for visualizing transit data using GTFS and GPS datasets. This project leverages Plotly for dynamic, interactive charts that display transit patterns, schedules, and real-time vehicle positions. Designed for urban planners, transit authorities, and public transportation enthusiasts to analyze and improve transit system
+
+This project visualizes GTFS and GPS data using Flask and Plotly. It is designed to help transit planners and enthusiasts understand transit patterns.
+
+## Installation
+
+1. Clone this repository.
+2. Install the required Python packages: `pip install -r requirements.txt`.
+3. Run the application: `python run.py`.
+4. Navigate to `localhost:5000` in your web browser.
+
+## Features
+
+- Home page with basic information.
+- Visualize transit data using a simple Plotly chart.
