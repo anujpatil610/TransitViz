@@ -23,8 +23,13 @@ def download_and_extract_gtfs_data(url):
 
 def load_gtfs_file(file_name):
     """Loads a specific GTFS file as a pandas DataFrame."""
-    file_path = os.path.join(EXTRACTED_FOLDER, file_name)
-    return pd.read_csv(file_path)
+    file_path = os.path.join('gtfs', file_name)
+    df = pd.read_csv(file_path)
+    df.columns = df.columns.str.strip()  # Strip any whitespace from headers
+    return df
+
+
+
 
 # Example usage
 if __name__ == "__main__":
