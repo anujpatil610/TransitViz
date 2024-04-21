@@ -1,7 +1,22 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Welcome to TransitViz</h1>
-<p>This is a basic Flask application for visualizing transit data.</p>
-<a href="{{ url_for('chart') }}">View Transit Chart</a>
+<div class="header">
+    <h1>Welcome to TransitViz</h1>
+    <p>Your one-stop portal for transit data visualization.</p>
+</div>
+
+<div class="about">
+    <h2>About This Project</h2>
+    <p>This application is designed to provide insights into transit systems using GTFS and GPS data. It allows users to view static and real-time data to improve urban transit operations and planning.</p>
+</div>
+
+<div class="dashboards">
+    <h2>Explore Our Dashboards</h2>
+    <ul>
+        <li><a href="{{ url_for('gtfs_dashboard') }}">GTFS Static Dashboard</a> - Explore static transit data.</li>
+        <li><a href="{{ url_for('gps_dashboard') }}">GPS Real-Time Dashboard</a> - View real-time transit locations and statuses.</li>
+    </ul>
+</div>
+
 {% endblock %}
