@@ -42,6 +42,49 @@ def get_weekly_timetable_by_route_name(route_long_name):
     return weekly_schedule
 
 
+# ... (other imports and functions)
+
+def process_timetable(weekly_timetable, stops):
+    calendar = load_gtfs_file('calendar.txt')
+    # Merge the timetable DataFrame with the stops DataFrame to get stop names
+    weekly_timetable = weekly_timetable.merge(stops, on='stop_id', how='left')
+    
+    # Select only the columns you want to display
+    weekly_timetable = weekly_timetable[['arrival_time', 'departure_time', 'stop_name']]
+    
+    # Rename columns to be more user-friendly
+    weekly_timetable.columns = ['Arrival Time', 'Departure Time', 'Stop Name']
+    
+
+    # Convert 'arrival_time' and 'departure_time' to datetime
+    weekly_timetable['arrival_time'] = pd.to_datetime(weekly_timetable['arrival_time'], format='%H:%M:%S').dt.strftime('%I:%M %p')
+    weekly_timetable['departure_time'] = pd.to_datetime(weekly_timetable['departure_time'], format='%H:%M:%S').dt.strftime('%I:%M %p')
+
+    # Merge with the calendar DataFrame to include day information
+    weekly_timetable = weekly_timetable.merge(calendar, on='service_id', how='left')
+
+    # Create a new column for day indications, adjust according to your GTFS data structure
+    weekly_timetable['schedule_days'] = weekly_timetable.apply(
+        lambda row: 'Mon-Fri' if (row['monday'] == 1 and row['saturday'] == 0 and row['sunday'] == 0) 
+        else 'Sat' if row['saturday'] == 1 
+        else 'Sun' if row['sunday'] == 1 
+        else 'Other',
+        axis=1
+    )
+
+    # Select and order the columns for display
+    weekly_timetable = weekly_timetable[['Stop Name', 'Arrival Time', 'Departure Time', 'schedule_days']]
+
+    # Return the processed DataFrame
+    return weekly_timetable
+
+    # Return the processed DataFrame
+    return weekly_timetable
+
+# Remember to export this function if it's not already in the __all__ variable
+
+
+
 
 def get_all_route_names():
     """Returns a list of all route long names."""
