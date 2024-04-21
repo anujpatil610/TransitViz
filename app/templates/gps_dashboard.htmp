@@ -1,0 +1,6 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>GPS Real-Time Dashboard</h1>
+<p>This dashboard provides real-time data visualizations of GPS tracking of transit vehicles.</p>
+{% endblock %}

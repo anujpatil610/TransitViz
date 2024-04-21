@@ -1,16 +1,16 @@
 from app import app
 from flask import render_template
-from app.utils.gtfs_parser import load_gtfs_file
+
+@app.route('/')
+def index():
+    return render_template('index.html', title='Home')
 
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
-    # Load necessary GTFS data files
-    routes = load_gtfs_file('routes.txt')
-    trips = load_gtfs_file('trips.txt')
-    stops = load_gtfs_file('stops.txt')
-    stop_times = load_gtfs_file('stop_times.txt')
+    # Assume data loading functions are defined and called here
+    return render_template('gtfs_dashboard.html', title='GTFS Dashboard')
 
-    # Example: Process and pass data to the template
-    # This is where you can perform more complex data manipulations and joins
-
-    return render_template('gtfs_dashboard.html', routes=routes, trips=trips, stops=stops, stop_times=stop_times)
+@app.route('/gps-dashboard')
+def gps_dashboard():
+    # Placeholder content for now
+    return render_template('gps_dashboard.html', title='GPS Dashboard')
