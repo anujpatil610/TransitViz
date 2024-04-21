@@ -9,15 +9,19 @@ def index():
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
     try:
-        routes = load_gtfs_file('routes.txt')  # Ensure this file exists in the gtfs directory
+        routes = load_gtfs_file('routes.txt')
+        if routes.empty:  # Correct way to check if DataFrame is empty
+            app.logger.info('No routes data available.')
+            routes = None  # Optional: handle the case where no data is available
+        
+        # Similarly, check other DataFrames
         trips = load_gtfs_file('trips.txt')
         stops = load_gtfs_file('stops.txt')
         stop_times = load_gtfs_file('stop_times.txt')
 
         return render_template('gtfs_dashboard.html', routes=routes, trips=trips, stops=stops, stop_times=stop_times)
     except Exception as e:
-        # Log error and abort with a server error
-        app.logger.error('Failed to load GTFS data: {}'.format(e))
+        app.logger.error(f'Failed to load GTFS data: {e}')
         abort(500)  # Internal Server Error
 
 @app.route('/gps-dashboard')
