@@ -6,23 +6,21 @@ from app.utils.gtfs_parser import load_gtfs_file
 def index():
     return render_template('index.html', title='Home')
 
+from flask import render_template
+from app import app
+from app.utils.gtfs_parser import load_gtfs_file
+
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
+    # Load the GTFS data after ensuring the files are extracted
     try:
         routes = load_gtfs_file('routes.txt')
-        if routes.empty:  # Correct way to check if DataFrame is empty
-            app.logger.info('No routes data available.')
-            routes = None  # Optional: handle the case where no data is available
-        
-        # Similarly, check other DataFrames
-        trips = load_gtfs_file('trips.txt')
-        stops = load_gtfs_file('stops.txt')
-        stop_times = load_gtfs_file('stop_times.txt')
-
-        return render_template('gtfs_dashboard.html', routes=routes, trips=trips, stops=stops, stop_times=stop_times)
+        return render_template('gtfs_dashboard.html', routes=routes)
+    except FileNotFoundError:
+        return "GTFS data file not found", 500
     except Exception as e:
-        app.logger.error(f'Failed to load GTFS data: {e}')
-        abort(500)  # Internal Server Error
+        return f"An error occurred: {e}", 500
+
 
 @app.route('/gps-dashboard')
 def gps_dashboard():
