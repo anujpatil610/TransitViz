@@ -58,56 +58,53 @@ import pandas as pd
 
 import pandas as pd
 
-import pandas as pd
-
-import pandas as pd
-
 def process_timetable(weekly_timetable, stops, calendar):
-    # Ensure data types are consistent and appropriate for merging
+    # Ensure all data types for stop_id are consistent
     weekly_timetable['stop_id'] = weekly_timetable['stop_id'].astype(str).str.strip()
     stops['stop_id'] = stops['stop_id'].astype(str).str.strip()
 
-    # Validate presence of 'stop_name' in 'stops' DataFrame
-    if 'stop_name' not in stops.columns:
-        raise Exception("'stop_name' column missing from stops DataFrame.")
-    if stops['stop_name'].isna().any():
-        raise Exception("Null 'stop_name' values found in stops DataFrame.")
-
-    # Fill any nulls in 'stop_name' to prevent issues post-merge
-    stops['stop_name'].fillna('Missing Stop Name', inplace=True)
-
-    # Merge to add 'Stop Name' from the stops DataFrame.
+    # Perform the merge to add 'Stop Name' from the stops DataFrame
     merged_timetable = weekly_timetable.merge(stops[['stop_id', 'stop_name']], on='stop_id', how='left')
+
+    # Immediately check the result of the merge
     if merged_timetable['stop_name'].isna().any():
-        raise Exception("Merge failed to map some 'stop_id' to 'stop_name'. Please check data consistency.")
+        print("Issues detected post-merge: Missing 'stop_name' entries found.")
+        problematic_ids = merged_timetable[merged_timetable['stop_name'].isna()]['stop_id'].unique()
+        print(f"Problematic 'stop_id's: {problematic_ids}")
+        # Also print the stops that were supposed to match but didn't
+        print("Entries in 'stops' DataFrame that should have matched:")
+        print(stops[stops['stop_id'].isin(problematic_ids)])
 
     # Merge calendar data
     merged_timetable = merged_timetable.merge(calendar, on='service_id', how='left')
     if 'monday' not in merged_timetable.columns:
         raise KeyError("'monday' column is missing after merging with calendar DataFrame.")
 
-    # Calculate 'schedule_days' based on operational days
+    # Process schedule days based on the calendar
     merged_timetable['schedule_days'] = merged_timetable.apply(
-        lambda row: 'Mon-Fri' if all(row[day] == 1 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) 
-        else 'Weekend' if row['saturday'] == 1 and row['sunday'] == 1 
+        lambda row: 'Mon-Fri' if all(row[day] == 1 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'])
+        else 'Weekend' if row['saturday'] == 1 and row['sunday'] == 1
         else 'Mixed',
         axis=1
     )
 
-    # Convert times and format them
+    # Format the times for display
     merged_timetable['Arrival Time'] = pd.to_datetime(merged_timetable['arrival_time'], errors='coerce').dt.strftime('%I:%M %p')
     merged_timetable['Departure Time'] = pd.to_datetime(merged_timetable['departure_time'], errors='coerce').dt.strftime('%I:%M %p')
 
-    # Sort by 'schedule_days' and time
+    # Sort the timetable by days and times
     merged_timetable.sort_values(by=['schedule_days', 'Arrival Time', 'Departure Time'], inplace=True)
 
-    # Prepare final display table
+    # Select the columns to display
     columns_to_display = ['stop_name', 'Arrival Time', 'Departure Time', 'schedule_days']
     final_timetable = merged_timetable[columns_to_display]
 
     return final_timetable
 
-# Now, this function includes rigorous checks for data integrity and explicitly handles potential null values in 'stop_name'.
+# Assume weekly_timetable, stops, and calendar are already loaded DataFrames
+ # Print the first few rows to verify the processing
+
+
 
 
 
