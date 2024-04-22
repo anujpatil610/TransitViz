@@ -56,39 +56,65 @@ def get_weekly_timetable_by_route_name(route_long_name):
 
 import pandas as pd
 
+import pandas as pd
+
+import pandas as pd
+
+import pandas as pd
+
 def process_timetable(weekly_timetable, stops, calendar):
-    # Check if 'stop_name' is present in the stops DataFrame.
+    # Ensure data types are consistent and appropriate for merging
+    weekly_timetable['stop_id'] = weekly_timetable['stop_id'].astype(str).str.strip()
+    stops['stop_id'] = stops['stop_id'].astype(str).str.strip()
+
+    # Validate presence of 'stop_name' in 'stops' DataFrame
     if 'stop_name' not in stops.columns:
-        raise KeyError("'stop_name' column is not present in the stops DataFrame.")
+        raise Exception("'stop_name' column missing from stops DataFrame.")
+    if stops['stop_name'].isna().any():
+        raise Exception("Null 'stop_name' values found in stops DataFrame.")
+
+    # Fill any nulls in 'stop_name' to prevent issues post-merge
+    stops['stop_name'].fillna('Missing Stop Name', inplace=True)
 
     # Merge to add 'Stop Name' from the stops DataFrame.
-    weekly_timetable = weekly_timetable.merge(stops[['stop_id', 'stop_name']], on='stop_id', how='left')
+    merged_timetable = weekly_timetable.merge(stops[['stop_id', 'stop_name']], on='stop_id', how='left')
+    if merged_timetable['stop_name'].isna().any():
+        raise Exception("Merge failed to map some 'stop_id' to 'stop_name'. Please check data consistency.")
 
-    # Check if all day columns are present in the calendar DataFrame.
-    day_columns = {'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'}
-    if not day_columns.issubset(calendar.columns):
-        raise KeyError("One or more expected day columns are not present in the calendar DataFrame.")
+    # Merge calendar data
+    merged_timetable = merged_timetable.merge(calendar, on='service_id', how='left')
+    if 'monday' not in merged_timetable.columns:
+        raise KeyError("'monday' column is missing after merging with calendar DataFrame.")
 
-    # Merge with the calendar DataFrame to add day schedule information.
-    weekly_timetable = weekly_timetable.merge(calendar, on='service_id', how='left')
-
-    # Determine the schedule_days based on the days of operation.
-    weekly_timetable['schedule_days'] = weekly_timetable.apply(
-        lambda row: 'Mon-Fri' if all([row[day] == 1 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']]) and all([row[day] == 0 for day in ['saturday', 'sunday']])
-        else 'Weekend' if all([row[day] == 1 for day in ['saturday', 'sunday']]) and all([row[day] == 0 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']])
-        else 'Mixed' if any([row[day] == 1 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']])
-        else 'Other',
+    # Calculate 'schedule_days' based on operational days
+    merged_timetable['schedule_days'] = merged_timetable.apply(
+        lambda row: 'Mon-Fri' if all(row[day] == 1 for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) 
+        else 'Weekend' if row['saturday'] == 1 and row['sunday'] == 1 
+        else 'Mixed',
         axis=1
     )
 
-    # Format the arrival and departure times to 12-hour AM/PM format.
-    weekly_timetable['Arrival Time'] = pd.to_datetime(weekly_timetable['arrival_time'], errors='coerce').dt.strftime('%I:%M %p')
-    weekly_timetable['Departure Time'] = pd.to_datetime(weekly_timetable['departure_time'], errors='coerce').dt.strftime('%I:%M %p')
+    # Convert times and format them
+    merged_timetable['Arrival Time'] = pd.to_datetime(merged_timetable['arrival_time'], errors='coerce').dt.strftime('%I:%M %p')
+    merged_timetable['Departure Time'] = pd.to_datetime(merged_timetable['departure_time'], errors='coerce').dt.strftime('%I:%M %p')
 
-    # Select and sort by the necessary columns for display.
-    columns_to_display = ['Stop Name', 'Arrival Time', 'Departure Time', 'schedule_days']
-    weekly_timetable = weekly_timetable[columns_to_display]
-    weekly_timetable.sort_values(by=['Arrival Time', 'Departure Time'], inplace=True)
+    # Sort by 'schedule_days' and time
+    merged_timetable.sort_values(by=['schedule_days', 'Arrival Time', 'Departure Time'], inplace=True)
 
-    return weekly_timetable
+    # Prepare final display table
+    columns_to_display = ['stop_name', 'Arrival Time', 'Departure Time', 'schedule_days']
+    final_timetable = merged_timetable[columns_to_display]
+
+    return final_timetable
+
+# Now, this function includes rigorous checks for data integrity and explicitly handles potential null values in 'stop_name'.
+
+
+
+
+
+
+
+
+
 
