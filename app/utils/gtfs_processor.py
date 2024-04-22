@@ -54,14 +54,13 @@ def get_weekly_timetable_by_route_name(route_long_name):
     weekly_schedule = pd.merge(schedule, calendar, on='service_id', how='left')
     return weekly_schedule
 
-import pandas as pd
-
-import pandas as pd
-
 def process_timetable(weekly_timetable, stops, calendar):
     # Ensure all data types for stop_id are consistent
     weekly_timetable['stop_id'] = weekly_timetable['stop_id'].astype(str).str.strip()
     stops['stop_id'] = stops['stop_id'].astype(str).str.strip()
+
+    # Align columns before merging to avoid 'Operands are not aligned' error
+    weekly_timetable, stops = weekly_timetable.align(stops, axis=1, copy=False)
 
     # Perform the merge to add 'Stop Name' from the stops DataFrame
     merged_timetable = weekly_timetable.merge(stops[['stop_id', 'stop_name']], on='stop_id', how='left')
@@ -98,11 +97,14 @@ def process_timetable(weekly_timetable, stops, calendar):
     # Select the columns to display
     columns_to_display = ['stop_name', 'Arrival Time', 'Departure Time', 'schedule_days']
     final_timetable = merged_timetable[columns_to_display]
-
+    
     return final_timetable
 
-# Assume weekly_timetable, stops, and calendar are already loaded DataFrames
- # Print the first few rows to verify the processing
+
+
+
+
+
 
 
 

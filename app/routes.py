@@ -20,6 +20,9 @@ def gtfs_dashboard():
     stops_html = stops.to_html(classes='table table-responsive')
     return render_template('gtfs_dashboard.html', routes_html=routes_html, stops_html=stops_html)
 
+from flask import render_template, request
+import pandas as pd
+
 @app.route('/timetable', methods=['GET'])
 def timetable():
     route_names = get_all_route_names()
@@ -44,6 +47,7 @@ def timetable():
         timetable_html = "<div class='alert alert-info'>Please select a route to view the timetable.</div>"
 
     return render_template('timetable.html', timetable_html=timetable_html, route_names=route_names)
+
 
 @app.route('/gps-dashboard')
 def gps_dashboard():
