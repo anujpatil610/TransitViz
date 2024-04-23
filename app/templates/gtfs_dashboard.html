@@ -6,12 +6,25 @@
     <h1>GTFS Dashboard</h1>
     <p>Welcome to the GTFS Dashboard. Here's an overview of the transit data:</p>
 
+    <!-- Selection for routes -->
+    <div class="form-group">
+        <label for="routeSelect">Select a Route:</label>
+        <select id="routeSelect" class="form-control" onchange="updateMapAndStatistics()">
+            <option value="">All Routes</option>
+            {% for route in routes %}
+            <option value="{{ route.route_id }}">{{ route.route_short_name }} - {{ route.route_long_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="row">
         <div class="col-md-6">
-            <h2>Statistics</h2>
+            <h2 id="statisticsTitle">Overall Network Stats</h2>
             <div class="stats">
-                <p><strong>Number of Routes:</strong> {{ num_routes }}</p>
-                <p><strong>Number of Stops:</strong> {{ num_stops }}</p>
+                <p id="totalRoutes"><strong>Number of Routes:</strong> {{ num_routes }}</p>
+                <p id="totalStops"><strong>Number of Stops:</strong> {{ num_stops }}</p>
+                <p id="totalTrips" style="display:none;"><strong>Total Trips:</strong></p>
+                <p id="routeLength" style="display:none;"><strong>Route Length:</strong></p>
             </div>
             <div id="routeGraph"></div>
         </div>
@@ -20,106 +33,100 @@
             <div id="map" style="height: 400px;"></div>
         </div>
     </div>
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Route ID</th>
+                <th>Short Name</th>
+                <th>Long Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for route in routes %}
+            <tr>
+                <td>{{ route.route_id }}</td>
+                <td>{{ route.route_short_name }}</td>
+                <td>{{ route.route_long_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+{% endblock content %}
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Route ID</th>
-            <th>Short Name</th>
-            <th>Long Name</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for route in routes %}
-        <tr>
-            <td>{{ route.route_id }}</td>
-            <td>{{ route.route_short_name }}</td>
-            <td>{{ route.route_long_name }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-{% endblock %}
-
+{% block scripts %}
 <script>
-    fetch('/api/routes/stats')
-    .then(response => response.json())
-    .then(data => {
-        var trace = {
-            x: data.map(item => item.name),
-            y: data.map(item => item.count),
-            type: 'bar',
-            marker: {
-                color: 'blue'
-            }
-        };
-        var layout = {
-            title: 'Trip Counts by Route',
-            xaxis: {title: 'Routes'},
-            yaxis: {title: 'Number of Trips'}
-        };
-        Plotly.newPlot('routeGraph', [trace], layout);
-    });
-    </script>
-
-<script>
-    var map = L.map('map').setView([DefaultLatitude, DefaultLongitude], 13);  // Set appropriate center
+document.addEventListener("DOMContentLoaded", function() {
+    var map = L.map('map').setView([51.505, -0.09], 13); // Replace these coordinates with your default coordinates
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    
-    fetch('/api/stops')
-    .then(response => response.json())
-    .then(stops => {
-        stops.forEach(stop => {
-            L.marker([stop.lat, stop.lon]).addTo(map)
-                .bindPopup(`<strong>${stop.name}</strong>`);
-        });
-    });
-    </script>
-    
 
+    window.updateMapAndStatistics = function() {
+        var routeId = document.getElementById('routeSelect').value;
+        clearMap();
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Plotly Graph for Routes
-        fetch('/api/routes/stats')
-        .then(response => response.json())
-        .then(data => {
-            var trace1 = {
-                x: data.map(a => a.name),
-                y: data.map(a => a.count),
-                type: 'bar',
-                marker: {
-                    color: 'rgb(49,130,189)',
-                    opacity: 0.7,
-                }
-            };
-            var layout = {
-                title: 'Number of Trips by Route',
-                barmode: 'group'
-            };
-            Plotly.newPlot('routeGraph', [trace1], layout);
-        });
+        if (routeId) {
+            fetchStopsAndRoute(routeId);
+            fetchRouteStatistics(routeId);
+        } else {
+            resetStatistics();
+        }
+    };
 
-        // Leaflet Map Setup
-        var map = L.map('map').setView([DefaultLatitude, DefaultLongitude], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // Fetch and display stops on the map
-        fetch('/api/stops')
-        .then(response => response.json())
-        .then(stops => {
-            stops.forEach(function(stop) {
-                L.marker([stop.lat, stop.lon]).addTo(map)
-                    .bindPopup(stop.name);
+    function fetchStopsAndRoute(routeId) {
+        // Fetch and display stops and route polyline for selected route
+        fetch(`/api/stops/${routeId}`)
+            .then(response => response.json())
+            .then(stops => {
+                stops.forEach(function(stop) {
+                    L.marker([stop.lat, stop.lon]).addTo(map)
+                        .bindPopup(`<strong>${stop.name}</strong>`);
+                });
             });
-        });
-    });
-</script>
-{% endblock %}
 
+        // Assuming there is an endpoint to fetch route paths
+        fetch(`/api/routePath/${routeId}`)
+            .then(response => response.json())
+            .then(routePath => {
+                var latlngs = routePath.map(point => [point.lat, point.lon]);
+                L.polyline(latlngs, {color: 'blue'}).addTo(map);
+            });
+    }
+
+    function fetchRouteStatistics(routeId) {
+        // Fetch and display statistics for selected route
+        fetch(`/api/routes/stats?route_id=${routeId}`)
+            .then(response => response.json())
+            .then(stats => {
+                document.getElementById('statisticsTitle').textContent = 'Statistics for Selected Route';
+                document.getElementById('totalRoutes').style.display = 'none';
+                document.getElementById('totalStops').innerHTML = `<strong>Stops on this Route:</strong> ${stats.stops}`;
+                document.getElementById('totalTrips').style.display = 'block';
+                document.getElementById('totalTrips').innerHTML = `<strong>Trips on this Route:</strong> ${stats.trips}`;
+                document.getElementById('routeLength').style.display = 'block';
+                document.getElementById('routeLength').innerHTML = `<strong>Route Length:</strong> ${stats.length} km`;
+            });
+    }
+
+    function resetStatistics() {
+        // Reset to overall stats when no route is selected
+        document.getElementById('statisticsTitle').textContent = 'Overall Network Stats';
+        document.getElementById('totalRoutes').style.display = 'block';
+        document.getElementById('totalRoutes').innerHTML = `<strong>Number of Routes:</strong> {{ num_routes }}`;
+        document.getElementById('totalStops').innerHTML = `<strong>Number of Stops:</strong> {{ num_stops }}`;
+        document.getElementById('totalTrips').style.display = 'none';
+        document.getElementById('routeLength').style.display = 'none';
+    }
+
+    function clearMap() {
+        map.eachLayer(function(layer) {
+            if (!(layer instanceof L.TileLayer)) {
+                map.removeLayer(layer);
+            }
+        });
+    }
+});
+</script>
+{% endblock scripts %}
