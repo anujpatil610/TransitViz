@@ -1,16 +1,125 @@
+<!-- app/templates/gtfs_dashboard.html -->
 {% extends 'layout.html' %}
 
 {% block content %}
 <div class="container">
     <h1>GTFS Dashboard</h1>
-    <h2>Routes</h2>
-    <div class="routes-table" id="routes">
-        {{ routes_html|safe }}
+    <p>Welcome to the GTFS Dashboard. Here's an overview of the transit data:</p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Statistics</h2>
+            <div class="stats">
+                <p><strong>Number of Routes:</strong> {{ num_routes }}</p>
+                <p><strong>Number of Stops:</strong> {{ num_stops }}</p>
+            </div>
+            <div id="routeGraph"></div>
+        </div>
+        <div class="col-md-6">
+            <h2>Map View</h2>
+            <div id="map" style="height: 400px;"></div>
+        </div>
     </div>
-    <h2>Stops</h2>
-    <div class="stops-table" id="stops">
-        {{ stops_html|safe }}
-    </div>
-    <!-- More sections will be added here -->
 </div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Route ID</th>
+            <th>Short Name</th>
+            <th>Long Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for route in routes %}
+        <tr>
+            <td>{{ route.route_id }}</td>
+            <td>{{ route.route_short_name }}</td>
+            <td>{{ route.route_long_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 {% endblock %}
+
+<script>
+    fetch('/api/routes/stats')
+    .then(response => response.json())
+    .then(data => {
+        var trace = {
+            x: data.map(item => item.name),
+            y: data.map(item => item.count),
+            type: 'bar',
+            marker: {
+                color: 'blue'
+            }
+        };
+        var layout = {
+            title: 'Trip Counts by Route',
+            xaxis: {title: 'Routes'},
+            yaxis: {title: 'Number of Trips'}
+        };
+        Plotly.newPlot('routeGraph', [trace], layout);
+    });
+    </script>
+
+<script>
+    var map = L.map('map').setView([DefaultLatitude, DefaultLongitude], 13);  // Set appropriate center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    fetch('/api/stops')
+    .then(response => response.json())
+    .then(stops => {
+        stops.forEach(stop => {
+            L.marker([stop.lat, stop.lon]).addTo(map)
+                .bindPopup(`<strong>${stop.name}</strong>`);
+        });
+    });
+    </script>
+    
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Plotly Graph for Routes
+        fetch('/api/routes/stats')
+        .then(response => response.json())
+        .then(data => {
+            var trace1 = {
+                x: data.map(a => a.name),
+                y: data.map(a => a.count),
+                type: 'bar',
+                marker: {
+                    color: 'rgb(49,130,189)',
+                    opacity: 0.7,
+                }
+            };
+            var layout = {
+                title: 'Number of Trips by Route',
+                barmode: 'group'
+            };
+            Plotly.newPlot('routeGraph', [trace1], layout);
+        });
+
+        // Leaflet Map Setup
+        var map = L.map('map').setView([DefaultLatitude, DefaultLongitude], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Fetch and display stops on the map
+        fetch('/api/stops')
+        .then(response => response.json())
+        .then(stops => {
+            stops.forEach(function(stop) {
+                L.marker([stop.lat, stop.lon]).addTo(map)
+                    .bindPopup(stop.name);
+            });
+        });
+    });
+</script>
+{% endblock %}
+
