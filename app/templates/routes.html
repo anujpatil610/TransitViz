@@ -1,0 +1,17 @@
+<!-- app/templates/routes.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Listing</title>
+</head>
+<body>
+    <h1>Route Listing</h1>
+    <ul>
+        {% for route in routes %}
+        <li>{{ route.route_short_name }} - {{ route.route_long_name }} ({{ route.route_color }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
