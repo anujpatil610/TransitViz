@@ -1,4 +1,5 @@
-from flask import render_template, request
+from flask import Flask, render_template, request
+from flask_sqlalchemy import SQLAlchemy
 from app import app
 from app.utils.gtfs_processor import (
     get_routes, get_stops, get_stop_times, get_trips, get_calendar,
@@ -6,11 +7,39 @@ from app.utils.gtfs_processor import (
     process_timetable  # make sure this is properly imported
 )
 
-@app.route('/')
-def index():
-    # Pass the list of route names to the homepage for the dropdown
-    route_names = get_all_route_names()
-    return render_template('index.html', title='Home', route_names=route_names)
+
+
+
+# Define your GTFS model
+class GTFS(db.Model):
+    __tablename__ = 'stops'
+    id = Column(Integer, primary_key=True)
+    # Define the columns here
+
+@app.route('/timetable', methods=['GET'])
+def timetable():
+    route_names = db.session.query(GTFS.route_name).distinct().all()
+    selected_route_name = request.args.get('route_name', None)
+    timetable_html = ""
+
+    if selected_route_name:
+        weekly_timetable = db.session.query(GTFS).filter(GTFS.route_name == selected_route_name).all()
+        if weekly_timetable:
+            stops = db.session.query(GTFS.stop_id, GTFS.stop_name).distinct().all()
+            calendar = db.session.query(GTFS.calendar).distinct().all()
+            weekly_timetable = weekly_timetable.merge(stops[['stop_id', 'stop_name']], on='stop_id', how='left')
+            try:
+                processed_timetable = process_timetable(weekly_timetable, stops, calendar)
+                timetable_html = processed_timetable.to_html(index=False, classes='table table-responsive')
+            except KeyError as e:
+                timetable_html = f"<div class='alert alert-danger'>Error in processing timetable data: {e}</div>"
+        else:
+            timetable_html = "<div class='alert alert-warning'>No timetable available for this route.</div>"
+    else:
+        timetable_html = "<div class='alert alert-info'>Please select a route to view the timetable.</div>"
+
+    return render_template('timetable.html', timetable_html=timetable_html, route_names=route_names)
+
 
 @app.route('/gtfs-dashboard')
 def gtfs_dashboard():
